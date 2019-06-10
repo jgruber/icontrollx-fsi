@@ -1,0 +1,86 @@
+#!/bin/bash
+
+RPM_FILE_PATH=$1
+RPM_SIG_PATH=$2
+RPM_FILE=$(basename $RPM_FILE_PATH)
+RPM_SIG=$(basename $RPM_SIG_PATH)
+
+CWD=$(pwd)
+WK_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+function copy_payload() {
+    cp $RPM_FILE_PATH $WK_DIR/payload/$RPM_FILE
+    cp $RPM_SIG_PATH $WK_DIR/payload/$RPM_SIG
+}
+
+function clean_payload() {
+    rm -rf $WK_DIR/payload/$RPM_FILE
+    rm -rf $WK_DIR/payload/$RPM_SIG
+    rm -rf $WK_DIR/payload.tar.gz
+    rm -rf $WK_DIR/decompress
+}
+
+function create_payload_archive() {
+    cd $WK_DIR/payload
+    tar cf $WK_DIR/payload.tar ./*
+}
+
+
+function create_decompression_script() {
+    cd $WK_DIR
+    echo "#!/bin/bash" > decompress
+    echo "export TMPDIR=\`mktemp -d /tmp/icontrollxfsi.XXXXXX\`" >> decompress
+    echo "ARCHIVE=\`awk '/^__ARCHIVE_BELOW__/ {print NR + 1; exit 0; }' \$0\`" >> decompress
+    echo "tail -n+\$ARCHIVE \$0 | tar xz -C \$TMPDIR" >> decompress
+    echo "CDIR=\`pwd\`" >> decompress
+    echo "cd \$TMPDIR" >> decompress
+    echo "./installer ./${RPM_FILE} ./${RPM_SIG}" >> decompress
+    echo "cd \$CDIR" >> decompress
+    echo "rm -rf \$TMPDIR" >> decompress
+    echo "exit 0" >> decompress
+    echo "" >> decompress
+    echo "__ARCHIVE_BELOW__" >> decompress
+}
+
+
+function build() {
+    cd $WK_DIR
+    if [ -e "payload.tar" ]; then
+        gzip payload.tar
+        if [ -e "payload.tar.gz" ]; then
+            cat decompress payload.tar.gz > "${RPM_FILE_PATH}.fsi"
+            chmod +x "${RPM_FILE_PATH}.fsi"
+            echo "${RPM_FILE_PATH}.fsi created"
+            clean_payload
+            cd $CWD
+        else
+            echo "payload.tar.gz does not exist"
+            clean_payload
+            cd $CWD
+            exit 1
+        fi
+    else
+        echo "payload.tar does not exist"
+        clean_payload
+        cd $CWD
+        exit 1
+    fi
+}
+
+function usage() {
+	echo "usage:"
+    echo "    build rpm_file_path rpm_sig_file_path"	
+}
+
+
+if [ "$#" -ne "2" ];
+    then usage
+    exit 1
+fi
+
+copy_payload
+create_payload_archive
+create_decompression_script
+build
+
+exit 0
