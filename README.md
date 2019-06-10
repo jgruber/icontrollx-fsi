@@ -21,6 +21,8 @@ An FSI is a self extracting executable file which contains:
 
 There are no needed changes to the BIG-IP to support the use of FSI installers.
 
+Since F5 development are the only ones validated to access the internal code signing serivce, the idea is that F5 development release and single FSI file for customer consumption.
+
 If an remote orchestrator has SSH access to a BIG-IP, the installation of iControl LX RPMs using FSI files is a simple workflow:
 
 Step 1. Upload the installer file to the remote BIG-IP
