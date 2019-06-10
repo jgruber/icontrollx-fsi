@@ -5,8 +5,21 @@ KEY_FILE='archive.pubkey.20160210.pem'
 TMOS_KEY_DIR='/usr/lib/install'
 
 function validate_signature() {
-    openssl dgst -sha512 -verify "${TMOS_KEY_DIR}/${KEY_FILE}" -signature $2 $1 > /dev/null
-    echo $?
+    key_path="${TMOS_KEY_DIR}/${KEY_FILE}"
+    package_name=$(basename $1)
+    if [ -f $key_path ]; then
+        openssl dgst -sha512 -verify "${TMOS_KEY_DIR}/${KEY_FILE}" -signature $2 $1 > /dev/null
+        if [ "$?" -ne "0" ]; then
+            echo "${package_name} has an invalid signature for key: ${KEY_FILE}"
+            return 1
+        else
+            echo "${package_name} is validated as F5 supported"
+            return $?
+        fi
+    else
+        echo "public key file: $key_path is not on this system"
+        return 1
+    fi
 }
 
 function install_package() {
@@ -16,12 +29,15 @@ function install_package() {
     python "${WK_DIR}/package_installer.py" "${package_name}"
 }
 
+installer_exit_status=0
+
 for pkg in *.rpm; do
     [ -f "${pkg}" ] && [ -f "${pkg}.sha512.sig" ] || break
-    validated=$(validate_signature ${pkg} ${pkg}.sha512.sig)
-    if [ $validated -ne 0 ]; then
-        exit 1
+    validate_signature ${pkg} ${pkg}.sha512.sig
+    if [ "$?" -ne "0" ]; then
+        installer_exit_status=1
     else
         install_package $1
     fi
 done
+
