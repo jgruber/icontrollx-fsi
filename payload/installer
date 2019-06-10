@@ -27,6 +27,11 @@ function install_package() {
     mkdir -p "/var/lib/cloud/fsiverified"
     cp "${WK_DIR}/${package_name}" "/var/lib/cloud/fsiverified/${package_name}"
     python "${WK_DIR}/package_installer.py" "${package_name}"
+    if [ "$?" -ne "0" ]; then
+        return 1
+    else
+        return 0
+    fi
 }
 
 installer_exit_status=0
@@ -38,6 +43,14 @@ for pkg in *.rpm; do
         installer_exit_status=1
     else
         install_package $1
+        installer_exit_status=$?
     fi
 done
 
+if [ "$installer_exit_status" -ne "0" ]; then
+    echo "installation failed"
+    exit 1
+else
+    echo "installation complete"
+    exit 0
+fi

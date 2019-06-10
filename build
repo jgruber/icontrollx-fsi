@@ -17,7 +17,6 @@ function clean_payload() {
     rm -rf $WK_DIR/payload/$RPM_FILE
     rm -rf $WK_DIR/payload/$RPM_SIG
     rm -rf $WK_DIR/payload.tar.gz
-    rm -rf $WK_DIR/decompress
 }
 
 function create_payload_archive() {
@@ -35,9 +34,10 @@ function create_decompression_script() {
     echo "CDIR=\`pwd\`" >> decompress
     echo "cd \$TMPDIR" >> decompress
     echo "./installer ./${RPM_FILE} ./${RPM_SIG}" >> decompress
+    echo "installer_exit_code=\$?" >> decompress
     echo "cd \$CDIR" >> decompress
     echo "rm -rf \$TMPDIR" >> decompress
-    echo "exit 0" >> decompress
+    echo "exit \$installer_exit_code" >> decompress
     echo "" >> decompress
     echo "__ARCHIVE_BELOW__" >> decompress
 }
