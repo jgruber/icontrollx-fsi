@@ -17,6 +17,7 @@ function clean_payload() {
     rm -rf $WK_DIR/payload/$RPM_FILE
     rm -rf $WK_DIR/payload/$RPM_SIG
     rm -rf $WK_DIR/payload.tar.gz
+    rm -rf $WK_DIR/decompress
 }
 
 function create_payload_archive() {
