@@ -16,14 +16,14 @@ An FSI is a self extracting executable file which contains:
 
 - the specified RPM package
 - the specified signature file
-- an installer script which validates the RPM package with the on box TMOS public PEM key
+- an installer script which validates the RPM package with the onbox TMOS public PEM key
 - an iControl REST installer script to install the validated RPM and show the installer task status
 
 There are no needed changes to the BIG-IP to support the use of FSI installers.
 
-If an remote orchestrator has SSH access to a BIG-IP, the installation of iControl LX RPMs is a simple workflow:
+If an remote orchestrator has SSH access to a BIG-IP, the installation of iControl LX RPMs using FSI files is a simple workflow:
 
-Step 1. Upload the FSI to the remote BIG-IP
+Step 1. Upload the installer file to the remote BIG-IP
 
 ```scp f5-declarative-onboarding-1.5.0-8.noarch.rpm.fsi root@bigip:/tmp/```
 
@@ -35,7 +35,7 @@ Step 3. Remove the installer file
 
 ```ssh root@bigip rm /tmp/f5-declarative-onboarding-1.5.0-8.noarch.rpm.fsi```
 
-You can embed the FSI execution into existing installation script. If the install successfully completes, the FSI will exit with a `0` status. If the installation fails for any reason, the FSI will exit with a `1` status.
+You can embed the FSI execution into existing installation scripts. If the install successfully completes, the FSI will exit with a `0` status. If the installation fails for any reason, the FSI will exit with a `1` status.
 
 The FSI will display console output showing the various phases of the installation.  A successful instllation looks like the following:
 
@@ -49,4 +49,4 @@ task: 362f172d-96e9-4afd-a9b1-af9f9df3436e returned status FINISHED
 installation complete
 0
 ```
-
+The console output can be piped to a log file.
