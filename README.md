@@ -1,4 +1,4 @@
-## Quick Start - How To Build and FSI ##
+## Quick Start - How To Build an FSI ##
 
 Clone this repository and change directory into the repository directory.
 
