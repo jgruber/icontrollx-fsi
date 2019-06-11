@@ -13,6 +13,11 @@ package_name=$(basename $1)
 python "${WK_DIR}/package_uninstaller.py" "${package_name}"
 if [ "$?" -ne "0" ]; then
     log "ERROR" "uninstall did not complete successfully"
+    package_dir_name=$(basename ${package_name} .rpm)
+    if [ -f  "/var/lib/cloud/fsiverified/${package_dir_name}/SUPPORT_CONTACT.txt" ]; then
+        support_contact=$(cat "/var/lib/cloud/fsiverified/${package_dir_name}/SUPPORT_CONTACT.txt")
+        log "INFO" "for support of this software contact: ${support_contact}" 
+    fi
     exit 1
 fi
 log "INFO" "uninstall complete"
