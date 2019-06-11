@@ -21,7 +21,44 @@ This module installs iControl LX RPMs
 
 import sys
 import time
+import logging
 import requests
+
+ICONTROL_TIMEOUT = 300
+MODULE_NAME = 'f5_secure_installer'
+
+LOG = logging.getLogger(MODULE_NAME)
+LOG.setLevel(logging.DEBUG)
+FORMATTER = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+LOGSTREAM = logging.StreamHandler(sys.stdout)
+LOGSTREAM.setFormatter(FORMATTER)
+LOG.addHandler(LOGSTREAM)
+
+
+def is_icontrol():
+    """Determines if the TMOS control plane iControl REST service is running"""
+    try:
+        return requests.get(
+            'http://localhost:8100/shared/echo',
+            auth=('admin', '')
+        ).json()['stage'] == 'STARTED'
+    except Exception:
+        return False
+
+
+def wait_for_icontrol(timeout=None):
+    """Blocks until the TMOS control plane iControl REST service is running"""
+    if not timeout:
+        timeout = ICONTROL_TIMEOUT
+    end_time = time.time() + timeout
+    while (end_time - time.time()) > 0:
+        if is_icontrol():
+            return True
+        LOG.debug('waiting for iControl REST to become available')
+        time.sleep(1)
+    return False
+
 
 def create_install_task(rpm_file_path):
     """Issues an iControl LX install task"""
@@ -54,7 +91,8 @@ def get_task_status(task_id):
     if response.status_code < 400:
         response_json = response.json()
         if 'errorMessage' in response_json:
-            print('task %s failed: %s', task_id, response_json['errorMessage'])
+            LOG.error('task: %s failed - %s', task_id,
+                      response_json['errorMessage'])
         return response_json['status']
     return False
 
@@ -65,7 +103,7 @@ def query_task_until_finished(task_id):
     while max_attempts > 0:
         max_attempts -= 1
         status = get_task_status(task_id)
-        print("task: %s returned status %s" % (task_id, status))
+        LOG.debug("task: %s returned status %s", task_id, status)
         if status and status == 'FINISHED':
             return True
         elif status == 'FAILED':
@@ -75,16 +113,15 @@ def query_task_until_finished(task_id):
 
 def install_package(rpm_file):
     """Installs an iControl LX RPM package"""
-    rpm_path="/var/lib/cloud/fsiverified/%s" % rpm_file
-    print("creating installation task for %s" % rpm_file)
+    rpm_path = "/var/lib/cloud/fsiverified/%s" % rpm_file
+    wait_for_icontrol()
+    LOG.info("creating iControl REST installation task for %s", rpm_file)
     install_task_id = create_install_task(rpm_path)
-    print("install task received id: %s" % install_task_id)
+    LOG.debug("task: %s created", install_task_id)
     rpm_installed = False
     if install_task_id:
         rpm_installed = query_task_until_finished(install_task_id)
         if rpm_installed:
-            # wait for f5-rest-node to restart
-            time.sleep(5)
             sys.exit(0)
         else:
             sys.exit(1)

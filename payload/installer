@@ -3,6 +3,14 @@
 WK_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 KEY_FILE='archive.pubkey.20160210.pem'
 TMOS_KEY_DIR='/usr/lib/install'
+MODULE_NAME='f5_secure_installer'
+
+
+function log() {
+    ts=$(date +'%Y-%m-%d %H:%m:%S,%3N')
+    echo "$ts - $MODULE_NAME - $1 - $2"
+}
+
 
 function validate_signature() {
     key_path="${TMOS_KEY_DIR}/${KEY_FILE}"
@@ -10,20 +18,21 @@ function validate_signature() {
     if [ -f $key_path ]; then
         openssl dgst -sha512 -verify "${TMOS_KEY_DIR}/${KEY_FILE}" -signature $2 $1 > /dev/null
         if [ "$?" -ne "0" ]; then
-            echo "${package_name} has an invalid signature for key: ${KEY_FILE}"
+            log "ERROR" "${package_name} has an invalid signature for key: ${KEY_FILE}"
             return 1
         else
-            echo "${package_name} is validated as F5 supported"
+            log "INFO" "${package_name} is validated as F5 supported"
             return $?
         fi
     else
-        echo "public key file: $key_path is not on this system"
+        log "ERROR" "public key file: $key_path is not on this system"
         return 1
     fi
 }
 
 function install_package() {
     package_name=$(basename $1)
+    log "INFO" "installing ${package_name}"
     mkdir -p "/var/lib/cloud/fsiverified"
     cp "${WK_DIR}/${package_name}" "/var/lib/cloud/fsiverified/${package_name}"
     python "${WK_DIR}/package_installer.py" "${package_name}"
@@ -48,9 +57,9 @@ for pkg in *.rpm; do
 done
 
 if [ "$installer_exit_status" -ne "0" ]; then
-    echo "installation failed"
+    log "ERROR" "installation failed"
     exit 1
 else
-    echo "installation complete"
+    log "INFO" "installation complete"
     exit 0
 fi

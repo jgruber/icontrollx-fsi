@@ -43,12 +43,13 @@ The FSI will display console output showing the various phases of the installati
 
 ```
 $ ssh root@172.13.1.103 /tmp/f5-declarative-onboarding-1.5.0-8.noarch.rpm.fsi; echo $?
-f5-declarative-onboarding-1.5.0-8.noarch.rpm is validated as F5 supported
-creating installation task for f5-declarative-onboarding-1.5.0-8.noarch.rpm
-install task received id: 362f172d-96e9-4afd-a9b1-af9f9df3436e
-task: 362f172d-96e9-4afd-a9b1-af9f9df3436e returned status CREATED
-task: 362f172d-96e9-4afd-a9b1-af9f9df3436e returned status FINISHED
-installation complete
+2019-06-11 05:06:42,841 - f5_secure_installer - INFO - f5-declarative-onboarding-1.5.0-8.noarch.rpm is validated as F5 supported
+2019-06-11 05:06:42,845 - f5_secure_installer - INFO - installing f5-declarative-onboarding-1.5.0-8.noarch.rpm
+2019-06-11 05:26:42,957 - f5_secure_installer - INFO - creating iControl REST installation task for f5-declarative-onboarding-1.5.0-8.noarch.rpm
+2019-06-11 05:26:42,963 - f5_secure_installer - DEBUG - task: ef57edc7-3ecc-4a7f-ab95-dd64e6af3fa0 created
+2019-06-11 05:26:42,970 - f5_secure_installer - DEBUG - task: ef57edc7-3ecc-4a7f-ab95-dd64e6af3fa0 returned status CREATED
+2019-06-11 05:26:44,978 - f5_secure_installer - DEBUG - task: ef57edc7-3ecc-4a7f-ab95-dd64e6af3fa0 returned status FINISHED
+2019-06-11 05:06:44,988 - f5_secure_installer - INFO - installation complete
 0
 ```
 The console output can be piped to a log file.
