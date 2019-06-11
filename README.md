@@ -73,11 +73,11 @@ If an remote orchestrator has SSH access to a BIG-IP, the installation of iContr
 
 **Step 2. Run the installer**
 
-```ssh root@bigip /tmp/f5-declarative-onboarding-1.5.0-8.noarch.fsi```
+```ssh root@bigip /tmp/f5-declarative-onboarding-1.5.0-8.noarch.fsi -q```
 
 **Step 3. Remove the installer file**
 
-```ssh root@bigip rm /tmp/f5-declarative-onboarding-1.5.0-8.noarch.fsi -q```
+```ssh root@bigip rm /tmp/f5-declarative-onboarding-1.5.0-8.noarch.fsi```
 
 You can embed the FSI execution into existing installation scripts. If the install successfully completes, the FSI will exit with a `0` status. If the installation fails for any reason, the FSI will exit with a `1` status.
 
