@@ -60,10 +60,13 @@ function build() {
     cd $WK_DIR
     if [ -e "payload.tar" ]; then
         gzip payload.tar
+        FSI_FILE_BASE_NAME=$(basename ${RPM_FILE_PATH} .rpm)
+        FSI_FILE_DIR=$(dirname ${RPM_FILE_PATH})
+        FSI_FILE_PATH="${FSI_FILE_DIR}/${FSI_FILE_BASE_NAME}.fsi"
         if [ -e "payload.tar.gz" ]; then
-            cat decompress payload.tar.gz > "${RPM_FILE_PATH}.fsi"
-            chmod +x "${RPM_FILE_PATH}.fsi"
-            log "INFO" "${RPM_FILE_PATH}.fsi created"
+            cat decompress payload.tar.gz > $FSI_FILE_PATH
+            chmod +x $FSI_FILE_PATH
+            log "INFO" "${FSI_FILE_PATH} created"
             clean_payload
             cd $CWD
         else

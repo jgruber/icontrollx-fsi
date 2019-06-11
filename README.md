@@ -10,6 +10,14 @@ This will create a self extracting installer called and FSI (F5 secure installer
 
 If the optional path to a public PEM key is specified, the file at that location will be embedded in the FSI and used for validation.
 
+An example build would look like this:
+
+```
+$ /data/project/icontrollx-fsi/build /data/F5Download/f5-declarative-onboarding-1.5.0-8.noarch.rpm /data/F5Download/f5-declarative-onboarding-1.5.0-8.noarch.rpm.sha512.sig /data/F5Download/archive.pubkey.20160210.pem 
+2019-06-11 08:06:29,091 - f5_secure_installer_builder - INFO - embedding public key /data/F5Download/archive.pubkey.20160210.pem for install validation
+2019-06-11 08:06:29,147 - f5_secure_installer_builder - INFO - /data/F5Download/f5-declarative-onboarding-1.5.0-8.noarch.fsi created
+```
+
 ## What's This Do Again? ##
 
 When an F5 iControl LX RPM is generated, with a published RPM signature file produced by the internal code signing service, those two build artifacts are taken as inputs to the FSI (F5 secure installer) `build` script. The output will be an FSI file suitable for iControl LX extension installation.
@@ -30,22 +38,22 @@ If an remote orchestrator has SSH access to a BIG-IP, the installation of iContr
 
 **Step 1. Upload the installer file to the remote BIG-IP**
 
-```scp f5-declarative-onboarding-1.5.0-8.noarch.rpm.fsi root@bigip:/tmp/```
+```scp f5-declarative-onboarding-1.5.0-8.noarch.fsi root@bigip:/tmp/```
 
 **Step 2. Run the installer**
 
-```ssh root@bigip /tmp/f5-declarative-onboarding-1.5.0-8.noarch.rpm.fsi```
+```ssh root@bigip /tmp/f5-declarative-onboarding-1.5.0-8.noarch.fsi```
 
 **Step 3. Remove the installer file**
 
-```ssh root@bigip rm /tmp/f5-declarative-onboarding-1.5.0-8.noarch.rpm.fsi```
+```ssh root@bigip rm /tmp/f5-declarative-onboarding-1.5.0-8.noarch.fsi```
 
 You can embed the FSI execution into existing installation scripts. If the install successfully completes, the FSI will exit with a `0` status. If the installation fails for any reason, the FSI will exit with a `1` status.
 
 The FSI will display console output showing the various phases of the installation.  A successful instllation looks like the following:
 
 ```
-$ ssh root@172.13.1.103 /tmp/f5-declarative-onboarding-1.5.0-8.noarch.rpm.fsi; echo $?
+$ ssh root@172.13.1.103 /tmp/f5-declarative-onboarding-1.5.0-8.noarch.fsi; echo $?
 2019-06-11 05:06:42,640 - f5_secure_installer - DEBUG - validating with embedded public key
 2019-06-11 05:06:42,841 - f5_secure_installer - INFO - f5-declarative-onboarding-1.5.0-8.noarch.rpm is validated as F5 supported
 2019-06-11 05:06:42,845 - f5_secure_installer - INFO - installing f5-declarative-onboarding-1.5.0-8.noarch.rpm
