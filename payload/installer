@@ -1,7 +1,7 @@
 #!/bin/bash
 
 WK_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-KEY_FILE='archive.pubkey.20160210.pem'
+TMOS_KEY_FILE='archive.pubkey.20160210.pem'
 TMOS_KEY_DIR='/usr/lib/install'
 MODULE_NAME='f5_secure_installer'
 
@@ -13,19 +13,27 @@ function log() {
 
 
 function validate_signature() {
-    key_path="${TMOS_KEY_DIR}/${KEY_FILE}"
+    # Use the TMOS onbox public PEM key in a well know directory
+    key_path="${TMOS_KEY_DIR}/${TMOS_KEY_FILE}"
+    # Use embedded public PEM key if it exists
+    if [ -f "${WK_DIR}/public_key.pem" ]; then
+        log "DEBUG" "validating with embedded public key"
+        key_path="${WK_DIR}/public_key.pem"
+    else
+        log "DEBUG" "validating against TMOS public key ${TMOS_KEY_FILE}"
+    fi
     package_name=$(basename $1)
     if [ -f $key_path ]; then
-        openssl dgst -sha512 -verify "${TMOS_KEY_DIR}/${KEY_FILE}" -signature $2 $1 > /dev/null
+        openssl dgst -sha512 -verify $key_path -signature $2 $1 > /dev/null
         if [ "$?" -ne "0" ]; then
-            log "ERROR" "${package_name} has an invalid signature for key: ${KEY_FILE}"
+            log "ERROR" "${package_name} is invalid for F5 support"
             return 1
         else
-            log "INFO" "${package_name} is validated as F5 supported"
-            return $?
+            log "INFO" "${package_name} validated as F5 supported"
+            return 0
         fi
     else
-        log "ERROR" "public key file: $key_path is not on this system"
+        log "ERROR" "public key file ${TMOS_KEY_FILE} is not on this system"
         return 1
     fi
 }

@@ -2,20 +2,32 @@
 
 RPM_FILE_PATH=$1
 RPM_SIG_PATH=$2
+PUBLIC_KEY=$3
 RPM_FILE=$(basename $RPM_FILE_PATH)
 RPM_SIG=$(basename $RPM_SIG_PATH)
+MODULE_NAME="f5_secure_installer_builder"
 
 CWD=$(pwd)
 WK_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 
+function log() {
+    ts=$(date +'%Y-%m-%d %H:%m:%S,%3N')
+    echo "$ts - $MODULE_NAME - $1 - $2"
+}
+
 function copy_payload() {
     cp $RPM_FILE_PATH $WK_DIR/payload/$RPM_FILE
     cp $RPM_SIG_PATH $WK_DIR/payload/$RPM_SIG
+    if ! [ -z "$PUBLIC_KEY" ]; then
+        log "INFO" "embedding public key ${PUBLIC_KEY} for install validation"
+        cp $PUBLIC_KEY $WK_DIR/payload/public_key.pem
+    fi
 }
 
 function clean_payload() {
     rm -rf $WK_DIR/payload/$RPM_FILE
     rm -rf $WK_DIR/payload/$RPM_SIG
+    rm -rf $WK_DIR/payload/public_key.pem
     rm -rf $WK_DIR/payload.tar.gz
     rm -rf $WK_DIR/decompress
 }
@@ -51,17 +63,17 @@ function build() {
         if [ -e "payload.tar.gz" ]; then
             cat decompress payload.tar.gz > "${RPM_FILE_PATH}.fsi"
             chmod +x "${RPM_FILE_PATH}.fsi"
-            echo "${RPM_FILE_PATH}.fsi created"
+            log "INFO" "${RPM_FILE_PATH}.fsi created"
             clean_payload
             cd $CWD
         else
-            echo "payload.tar.gz does not exist"
+            log "ERROR" "payload.tar.gz does not exist"
             clean_payload
             cd $CWD
             exit 1
         fi
     else
-        echo "payload.tar does not exist"
+        log "ERROR" "payload.tar does not exist"
         clean_payload
         cd $CWD
         exit 1
@@ -70,11 +82,11 @@ function build() {
 
 function usage() {
 	echo "usage:"
-    echo "    build rpm_file_path rpm_sig_file_path"	
+    echo "    build rpm_file_path rpm_sig_file_path [public_pem_key_path]"	
 }
 
 
-if [ "$#" -ne "2" ];
+if [ "$#" -lt "2" ];
     then usage
     exit 1
 fi
