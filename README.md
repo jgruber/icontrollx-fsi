@@ -1,4 +1,4 @@
-##Quick Start - How To Build and FSI##
+## Quick Start - How To Build and FSI ##
 
 Clone this repository and change directory into the repository directory.
 
@@ -10,7 +10,7 @@ This will create a self extracting installer called and FSI (F5 secure installer
 
 If the optional path to a public PEM key is specified, the file at that location will be embedded in the FSI and used for validation.
 
-##What's This Do Again?##
+## What's This Do Again? ##
 
 When an F5 iControl LX RPM is generated, with a published RPM signature file produced by the internal code signing service, those two build artifacts are taken as inputs to the FSI (F5 secure installer) `build` script. The output will be an FSI file suitable for iControl LX extension installation.
 
