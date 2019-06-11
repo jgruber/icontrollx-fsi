@@ -16,11 +16,10 @@
 # limitations under the License.
 #
 """
-This module installs iControl LX RPMs
+This module uninstalls iControl LX extension give their RPMs
 """
 
 import sys
-import os
 import time
 import logging
 import requests
@@ -61,10 +60,10 @@ def wait_for_icontrol(timeout=None):
     return False
 
 
-def create_install_task(rpm_file_path):
-    """Issues an iControl LX install task"""
+def create_uninstall_task(package_name):
+    """Issues an iControl LX uninstall task"""
     install_url = 'http://localhost:8100/mgmt/shared/iapp/package-management-tasks'
-    install_json = '{ "operation": "INSTALL", "packageFilePath": "%s" }' % rpm_file_path
+    install_json = '{ "operation": "UNINSTALL", "packageName": "%s" }' % package_name
     response = requests.post(install_url, auth=(
         'admin', ''), data=install_json)
     if response.status_code < 400:
@@ -112,22 +111,43 @@ def query_task_until_finished(task_id):
         time.sleep(2)
 
 
-def install_package(rpm_file):
-    """Installs an iControl LX RPM package"""
-    rpm_package_name = os.path.splitext(rpm_file)[0]
-    rpm_path = "/var/lib/cloud/fsiverified/%s/%s" % (
-        rpm_package_name, rpm_file)
+def return_package_task(task_id):
+    """Returns the content of an iControl LX task"""
+    task_url = 'http://localhost:8100/mgmt/shared/iapp/package-management-tasks/' + task_id
+    response = requests.get(task_url, auth=('admin', ''))
+    if response.status_code < 400:
+        response_json = response.json()
+        if 'queryResponse' in response_json:
+            return response_json['queryResponse']
+        return response_json
+    return False
+
+
+def get_installed_extensions():
+    """Queries installed iControl LX extensions"""
+    task_id = create_query_extensions_task()
+    LOG.debug("task: %s created to query installed extensions", task_id)
+    query_task_until_finished(task_id)
+    return return_package_task(task_id)
+
+
+def uninstall_extension(rpm_file):
+    """Uninstalls an iControl LX extension"""
     wait_for_icontrol()
-    LOG.info("creating iControl REST installation task for %s", rpm_file)
-    install_task_id = create_install_task(rpm_path)
-    LOG.debug("task: %s created", install_task_id)
-    rpm_installed = False
-    if install_task_id:
-        rpm_installed = query_task_until_finished(install_task_id)
-        if rpm_installed:
-            sys.exit(0)
-        sys.exit(1)
+    packages = get_installed_extensions()
+    for package in packages:
+        if rpm_file.startswith(package['packageName']):
+            LOG.info("creating iControl REST uninstall task for %s",
+                     package['packageName'])
+            task_id = create_uninstall_task(package['packageName'])
+            LOG.debug("task: %s created", task_id)
+            rpm_uninstalled = query_task_until_finished(task_id)
+            if rpm_uninstalled:
+                sys.exit(0)
+            sys.exit(1)
+    LOG.error('package for %s not installed', rpm_file)
+    sys.exit(1)
 
 
 if __name__ == "__main__":
-    install_package(sys.argv[1])
+    uninstall_extension(sys.argv[1])

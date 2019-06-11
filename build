@@ -1,10 +1,7 @@
 #!/bin/bash
 
-RPM_FILE_PATH=$1
-RPM_SIG_PATH=$2
-PUBLIC_KEY=$3
-RPM_FILE=$(basename $RPM_FILE_PATH)
-RPM_SIG=$(basename $RPM_SIG_PATH)
+TECH_SUPPORT_CONTACT_STRING='F5 Product Development (websupport.f5.com)'
+
 MODULE_NAME="f5_secure_installer_builder"
 
 CWD=$(pwd)
@@ -16,18 +13,36 @@ function log() {
 }
 
 function copy_payload() {
+    RPM_FILE=$(basename $RPM_FILE_PATH)
+    RPM_SIG=$(basename $RPM_SIG_PATH)
+    log "INFO" "embedding RPM package ${RPM_FILE_PATH}"
     cp $RPM_FILE_PATH $WK_DIR/payload/$RPM_FILE
+    log "INFO" "embedding signature file ${RPM_SIG_PATH}"
     cp $RPM_SIG_PATH $WK_DIR/payload/$RPM_SIG
-    if ! [ -z "$PUBLIC_KEY" ]; then
-        log "INFO" "embedding public key ${PUBLIC_KEY} for install validation"
-        cp $PUBLIC_KEY $WK_DIR/payload/public_key.pem
+    if ! [ -z "$PUBLIC_KEY_PATH" ]; then
+        log "INFO" "embedding public key ${PUBLIC_KEY_PATH} for install validation"
+        cp $PUBLIC_KEY_PATH $WK_DIR/payload/public_key.pem
     fi
+    if ! [ -z "$LICENSE_FILE_PATH" ]; then
+        log "INFO" "embedding license file ${LICENSE_FILE_PATH}"
+        cp $LICENSE_FILE_PATH $WK_DIR/payload/LICENSE.txt
+    fi
+    if ! [ -z "$EULA_FILE_PATH" ]; then
+        log "INFO" "embedding EULA file ${EULA_FILE_PATH}"
+        cp $LICENSE_FILE_PATH $WK_DIR/payload/EULA.txt
+    fi
+    echo $TECH_SUPPORT_CONTACT_STRING > $WK_DIR/payload/SUPPORT_CONTACT.txt
 }
 
 function clean_payload() {
+    RPM_FILE=$(basename $RPM_FILE_PATH)
+    RPM_SIG=$(basename $RPM_SIG_PATH)
     rm -rf $WK_DIR/payload/$RPM_FILE
     rm -rf $WK_DIR/payload/$RPM_SIG
     rm -rf $WK_DIR/payload/public_key.pem
+    rm -rf $WK_DIR/payload/LICENSE.txt
+    rm -rf $WK_DIR/payload/EULA.txt
+    rm -rf $WK_DIR/payload/SUPPORT_CONTACT.txt
     rm -rf $WK_DIR/payload.tar.gz
     rm -rf $WK_DIR/decompress
 }
@@ -46,8 +61,16 @@ function create_decompression_script() {
     echo "tail -n+\$ARCHIVE \$0 | tar xz -C \$TMPDIR" >> decompress
     echo "CDIR=\`pwd\`" >> decompress
     echo "cd \$TMPDIR" >> decompress
-    echo "./installer ./${RPM_FILE} ./${RPM_SIG}" >> decompress
-    echo "installer_exit_code=\$?" >> decompress
+    echo "if [ \"\$1\" == \"-u\" ]; then" >> decompress
+    echo "    ./uninstaller ./${RPM_FILE}" >> decompress
+    echo "    installer_exit_code=\$?" >> decompress
+    echo "elif [ \"\$1\" == \"-q\" ]; then" >> decompress
+    echo "    ./installer ./${RPM_FILE} ./${RPM_SIG} quiet" >> decompress
+    echo "    installer_exit_code=\$?" >> decompress
+    echo "else" >> decompress
+    echo "    ./installer ./${RPM_FILE} ./${RPM_SIG}" >> decompress
+    echo "    installer_exit_code=\$?" >> decompress
+    echo "fi" >> decompress
     echo "cd \$CDIR" >> decompress
     echo "rm -rf \$TMPDIR" >> decompress
     echo "exit \$installer_exit_code" >> decompress
@@ -84,13 +107,72 @@ function build() {
 }
 
 function usage() {
-	echo "usage:"
-    echo "    build rpm_file_path rpm_sig_file_path [public_pem_key_path]"	
+	echo ""
+    echo "build script usage:"
+    echo "    build "
+    echo "          -r rpm_file_path (required)"
+    echo "          -s signature_file_path (required)"
+    echo "          -k public_key_path (optional)"
+    echo "          -l license_file_path (optional)"
+    echo "          -e eula_file_path (optional)"
+    echo "          -t tech_support_display_string (optional)"
+    echo "          -h display this screen"
+    echo ""
 }
 
 
-if [ "$#" -lt "2" ];
-    then usage
+while getopts ":r:s:k:l:e:t:h" opt; do
+    case ${opt} in
+        r )
+            RPM_FILE_PATH=$OPTARG
+            ;;
+        s )
+            RPM_SIG_PATH=$OPTARG
+            ;;
+        k )
+            PUBLIC_KEY_PATH=$OPTARG
+            ;;
+        l )
+            LICENSE_FILE_PATH=$OPTARG
+            ;;
+        e )
+            EULA_FILE_PATH=$OPTARG
+            ;;
+        t )
+            TECH_SUPPORT_CONTACT_STRING=$OPTARG
+            ;;
+        h )
+            SHOW_HELP=1
+            ;;
+        \? )
+            echo "Invalid option: $OPTARG" 1>&2
+            SHOW_HELP=1
+            ;;
+        : )
+            echo "Invalid option: $OPTARG requires a value" 1>&2
+            SHOW_HELP=1
+        esac
+done
+shift $((OPTIND -1))
+
+if [ $SHOW_HELP ]; then
+    usage
+    exit 0
+fi
+
+if [ -z $RPM_FILE_PATH ] || [ -z $RPM_SIG_PATH ]; then
+    echo "RPM file path (-r) and signature file path (-s) are both required" 1>&2
+    usage
+    exit 1
+fi
+
+if ! [ -f $RPM_FILE_PATH ]; then 
+    echo "RPM file ${RPM_FILE_PATH} does not exist" 1>&2
+    exit 1
+fi
+
+if ! [ -f $RPM_SIG_PATH ]; then 
+    echo "signature file ${RPM_SIG_PATH} does not exist" 1>&2
     exit 1
 fi
 

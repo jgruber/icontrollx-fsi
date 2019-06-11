@@ -40,9 +40,40 @@ function validate_signature() {
 
 function install_package() {
     package_name=$(basename $1)
+    package_dir_name=$(basename ${package_name} .rpm)
     log "INFO" "installing ${package_name}"
-    mkdir -p "/var/lib/cloud/fsiverified"
-    cp "${WK_DIR}/${package_name}" "/var/lib/cloud/fsiverified/${package_name}"
+    mkdir -p "/var/lib/cloud/fsiverified/${package_dir_name}"
+    cp "${WK_DIR}/${package_name}" "/var/lib/cloud/fsiverified/${package_dir_name}/${package_name}"
+    if [ -f "${WK_DIR}/LICENSE.txt" ]; then
+        cp "${WK_DIR}/LICENSE.txt" "/var/lib/cloud/fsiverified/${package_dir_name}/LICENSE.txt"
+        if [ "$3" == "quiet" ]; then
+            log "INFO" "software license details in /var/lib/cloud/fsiverified/${package_dir_name}/LICENSE.txt"
+        else
+            echo "PLEASE READ THE LICENSE"
+            more "${WK_DIR}/LICENSE.txt"
+        fi
+    fi
+    if [ -f "${WK_DIR}/EULA.txt" ]; then
+        cp "${WK_DIR}/EULA.txt" "/var/lib/cloud/fsiverified/${package_dir_name}/EULA.txt"
+        if [ "$3" == "quiet" ]; then
+            log "INFO" "end user license details in /var/lib/cloud/fsiverified/${package_dir_name}/EULA.txt"
+        else
+            echo "PLEASE ACCEPT THE END USER LICENSE AGREEMENT"
+            more "${WK_DIR}/EULA.txt"
+            read -n1 -p "Please type Y or y to agree to this license: "
+            while [[  ! $REPLY =~ ^[Yy]$  ]]
+            do
+                echo ""
+                read -n1 -p "Please type Y or y to agree to this license: "
+            done
+            echo ""
+        fi
+    fi
+    if [ -f "${WK_DIR}/SUPPORT_CONTACT.txt" ]; then
+        cp "${WK_DIR}/SUPPORT_CONTACT.txt" "/var/lib/cloud/fsiverified/${package_dir_name}/SUPPORT_CONTACT.txt"
+        support_contact=$(cat ${WK_DIR}/SUPPORT_CONTACT.txt)
+        log "INFO" "for support of this software contact: ${support_contact}"
+    fi
     python "${WK_DIR}/package_installer.py" "${package_name}"
     if [ "$?" -ne "0" ]; then
         return 1
@@ -53,13 +84,18 @@ function install_package() {
 
 installer_exit_status=0
 
+if [ -z $3 ]; then
+    log "DEBUG" "running installer with argument $3"
+fi
+
+
 for pkg in *.rpm; do
     [ -f "${pkg}" ] && [ -f "${pkg}.sha512.sig" ] || break
     validate_signature ${pkg} ${pkg}.sha512.sig
     if [ "$?" -ne "0" ]; then
         installer_exit_status=1
     else
-        install_package $1
+        install_package $1 $2 $3
         installer_exit_status=$?
     fi
 done

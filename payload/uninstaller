@@ -1,0 +1,19 @@
+#!/bin/bash
+
+WK_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+MODULE_NAME='f5_secure_installer'
+
+
+function log() {
+    ts=$(date +'%Y-%m-%d %H:%m:%S,%3N')
+    echo "$ts - $MODULE_NAME - $1 - $2"
+}
+
+package_name=$(basename $1)
+python "${WK_DIR}/package_uninstaller.py" "${package_name}"
+if [ "$?" -ne "0" ]; then
+    log "ERROR" "uninstall did not complete successfully"
+    exit 1
+fi
+log "INFO" "uninstall complete"
+exit 0
