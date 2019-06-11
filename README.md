@@ -54,7 +54,7 @@ An FSI is a self extracting executable file which contains:
 - optionally a LICENSE file
 - optionally a EULA file
 - optionally a tech support contact string to be displayed on installation
-- an installer script which validates the RPM package with the onbox TMOS public PEM key
+- an installer script which validates the RPM package with the either the onbox TMOS public PEM key (archive.pubkey.20160210.pem) or an optional embedded public PEM key.
 - an iControl REST installer script to install the validated RPM and show the installer task status
 - an uninstaller script which conditions inputs and calls the iControl REST uninstalled script
 - an iControl REST uninstaller script which attempts find and uninstall a package matching the embedded RPM in the FSI
