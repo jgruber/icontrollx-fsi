@@ -102,16 +102,35 @@ The FSI will display console output showing the various phases of the installati
 
 ```
 $ ssh root@172.13.1.103 /tmp/f5-declarative-onboarding-1.5.0-8.noarch.fsi -q; echo $?
-2019-06-11 05:06:42,640 - f5_secure_installer - DEBUG - validating with embedded public key
-2019-06-11 05:06:42,841 - f5_secure_installer - INFO - f5-declarative-onboarding-1.5.0-8.noarch.rpm is validated as F5 supported
-2019-06-11 05:06:42,845 - f5_secure_installer - INFO - installing f5-declarative-onboarding-1.5.0-8.noarch.rpm
-2019-06-11 05:26:42,957 - f5_secure_installer - INFO - creating iControl REST installation task for f5-declarative-onboarding-1.5.0-8.noarch.rpm
-2019-06-11 05:26:42,963 - f5_secure_installer - DEBUG - task: ef57edc7-3ecc-4a7f-ab95-dd64e6af3fa0 created
-2019-06-11 05:26:42,970 - f5_secure_installer - DEBUG - task: ef57edc7-3ecc-4a7f-ab95-dd64e6af3fa0 returned status CREATED
-2019-06-11 05:26:44,978 - f5_secure_installer - DEBUG - task: ef57edc7-3ecc-4a7f-ab95-dd64e6af3fa0 returned status FINISHED
-2019-06-11 05:06:44,988 - f5_secure_installer - INFO - installation complete
+2019-06-11 10:06:23,829 - f5_secure_installer - DEBUG - validating with embedded public key
+2019-06-11 10:06:23,841 - f5_secure_installer - INFO - f5-declarative-onboarding-1.5.0-8.noarch.rpm validated as F5 supported
+2019-06-11 10:06:23,843 - f5_secure_installer - INFO - installing f5-declarative-onboarding-1.5.0-8.noarch.rpm
+2019-06-11 10:06:23,850 - f5_secure_installer - INFO - software license details in /var/lib/cloud/fsiverified/f5-declarative-onboarding-1.5.0-8.noarch/LICENSE.txt
+2019-06-11 10:06:23,853 - f5_secure_installer - INFO - end user license details in /var/lib/cloud/fsiverified/f5-declarative-onboarding-1.5.0-8.noarch/EULA.txt
+2019-06-11 10:06:23,855 - f5_secure_installer - INFO - for support of this software contact: F5 Product Development (websupport.f5.com)
+2019-06-11 10:33:23,962 - f5_secure_installer - INFO - creating iControl REST installation task for f5-declarative-onboarding-1.5.0-8.noarch.rpm
+2019-06-11 10:33:23,970 - f5_secure_installer - DEBUG - task: 8eadb948-5bf2-483c-9bc5-3327ddc3a2cc created
+2019-06-11 10:33:23,979 - f5_secure_installer - DEBUG - task: 8eadb948-5bf2-483c-9bc5-3327ddc3a2cc returned status STARTED
+2019-06-11 10:33:25,984 - f5_secure_installer - DEBUG - task: 8eadb948-5bf2-483c-9bc5-3327ddc3a2cc returned status FINISHED
+2019-06-11 10:06:25,996 - f5_secure_installer - INFO - installation complete
 0
 ```
+
+The uninstall process is the same, but with the `-u` argument supplied.
+
+```
+$ ssh root@172.13.1.103 /tmp/f5-declarative-onboarding-1.5.0-8.noarch.fsi -u; echo $?
+2019-06-11 10:35:48,278 - f5_secure_installer - DEBUG - task: 38f74213-1c95-4a62-b59e-89f026e057ba created to query installed extensions
+2019-06-11 10:35:48,286 - f5_secure_installer - DEBUG - task: 38f74213-1c95-4a62-b59e-89f026e057ba returned status CREATED
+2019-06-11 10:35:50,294 - f5_secure_installer - DEBUG - task: 38f74213-1c95-4a62-b59e-89f026e057ba returned status FINISHED
+2019-06-11 10:35:50,298 - f5_secure_installer - INFO - creating iControl REST uninstall task for f5-declarative-onboarding-1.5.0-8.noarch
+2019-06-11 10:35:50,309 - f5_secure_installer - DEBUG - task: 4ef45eb1-ee72-49e6-b44a-3a75e07a5262 created
+2019-06-11 10:35:50,316 - f5_secure_installer - DEBUG - task: 4ef45eb1-ee72-49e6-b44a-3a75e07a5262 returned status STARTED
+2019-06-11 10:35:52,319 - f5_secure_installer - DEBUG - task: 4ef45eb1-ee72-49e6-b44a-3a75e07a5262 returned status FINISHED
+2019-06-11 10:06:52,328 - f5_secure_installer - INFO - uninstall complete
+0
+```
+
 The console output can be piped to a log file. Unfortately there is currently now way to pass the log level to the installer. However the log contains no sensative information, so masking is not required.
 
 ## Simple openssl Code Signing Tutorial ###
